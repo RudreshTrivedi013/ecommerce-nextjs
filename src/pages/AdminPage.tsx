@@ -32,6 +32,7 @@ export default function AdminPage() {
   // Modals & Form states
   const [showProductModal, setShowProductModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [productForm, setProductForm] = useState({
     title: '',
     description: '',
@@ -147,13 +148,14 @@ export default function AdminPage() {
     }
   };
 
-  const handleDeleteProduct = async (productId: string) => {
-    if (!window.confirm('Are you sure you want to delete this product? This action cannot be undone.')) return;
+  const handleDeleteProduct = async () => {
+    if (!productToDelete) return;
     
     setIsActionLoading(true);
     try {
-      await deleteProductApi(productId);
+      await deleteProductApi(productToDelete.id);
       showToast('Product deleted successfully');
+      setProductToDelete(null);
       loadData();
     } catch (err: any) {
       showToast(err.message || 'Failed to delete product', 'error');
@@ -326,7 +328,7 @@ export default function AdminPage() {
                             <td style={styles.td}>
                               <div style={{ display: 'flex', gap: '8px' }}>
                                 <button onClick={() => handleOpenEditModal(p)} style={styles.editButton}>Edit</button>
-                                <button onClick={() => handleDeleteProduct(p.id)} style={styles.deleteButton}>Delete</button>
+                                <button onClick={() => setProductToDelete(p)} style={styles.deleteButton}>Delete</button>
                               </div>
                             </td>
                           </tr>
@@ -497,6 +499,43 @@ export default function AdminPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- DELETE CONFIRMATION MODAL --- */}
+      {productToDelete && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.confirmModalContent}>
+            <div style={styles.confirmModalHeader}>
+              <h3 style={styles.confirmModalTitle}>Confirm Deletion</h3>
+              <button onClick={() => setProductToDelete(null)} style={styles.modalClose}>×</button>
+            </div>
+            <div style={styles.confirmModalBody}>
+              <div style={styles.warningIcon}>⚠️</div>
+              <p style={styles.confirmText}>
+                Are you sure you want to delete <strong>{productToDelete.title}</strong>?
+              </p>
+              <p style={styles.warningText}>This action cannot be undone.</p>
+            </div>
+            <div style={styles.modalActions}>
+              <button 
+                type="button" 
+                onClick={() => setProductToDelete(null)} 
+                style={styles.secondaryButton}
+                disabled={isActionLoading}
+              >
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                onClick={handleDeleteProduct} 
+                style={styles.dangerButton}
+                disabled={isActionLoading}
+              >
+                {isActionLoading ? 'Deleting...' : 'Delete Product'}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -825,5 +864,64 @@ const styles: Record<string, React.CSSProperties> = {
     borderTop: '1px solid #1e293b',
     paddingTop: '20px',
     marginTop: '10px',
+  },
+  dangerButton: {
+    padding: '10px 16px',
+    background: '#ef4444',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '6px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    fontSize: '14px',
+    transition: 'background 0.15s ease',
+  },
+  confirmModalContent: {
+    backgroundColor: '#0f0f16',
+    border: '1px solid #1e293b',
+    borderRadius: '12px',
+    maxWidth: '440px',
+    width: '100%',
+    padding: '24px 32px',
+    maxHeight: '90vh',
+    overflowY: 'auto',
+    color: '#fff',
+    textAlign: 'center',
+  },
+  confirmModalHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderBottom: '1px solid #1e293b',
+    paddingBottom: '12px',
+    marginBottom: '16px',
+  },
+  confirmModalTitle: {
+    fontSize: '18px',
+    fontWeight: '700',
+    color: '#ef4444',
+  },
+  confirmModalBody: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '12px',
+    padding: '16px 0',
+  },
+  warningIcon: {
+    fontSize: '48px',
+    color: '#ef4444',
+    marginBottom: '8px',
+  },
+  confirmText: {
+    fontSize: '16px',
+    color: '#f8fafc',
+    margin: 0,
+    lineHeight: '1.5',
+  },
+  warningText: {
+    fontSize: '14px',
+    color: '#94a3b8',
+    margin: 0,
   },
 };
