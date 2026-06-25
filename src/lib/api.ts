@@ -5,7 +5,7 @@
 
 import type { Product, User, Review } from '../types';
 
-// ─── Generic fetch helper ─────────────────────────────────────────────────────
+const BASE_URL = import.meta.env.VITE_API_URL || '';
 
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const token = localStorage.getItem('token');
@@ -15,7 +15,7 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const res = await fetch(path, {
+  const res = await fetch(`${BASE_URL}${path}`, {
     ...options,
     headers: {
       ...headers,
